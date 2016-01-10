@@ -1,0 +1,17 @@
+[package]
+name = "xz-embedded-sys"
+version = "0.1.0"
+authors = ["Andrew Chin <achin@eminence32.net>"]
+build = "build.rs"
+links = "xzembedded"
+description = "Bindings to xz-embedded, a simple decompression-only xz impl"
+
+[dependencies]
+libc = "0.1"
+
+[build-dependencies]
+gcc = "0.3"
+
+[lib]
+name = "xz_embedded_sys"
+path = "lib.rs"
