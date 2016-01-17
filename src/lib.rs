@@ -59,10 +59,10 @@ pub fn decompress(compressed_data: &[u8]) -> Result<Vec<u8>, XZError> {
         let ret = unsafe { raw::xz_dec_run(state, &mut buf) };
         //println!("Decomp returned {:?}", ret);
         if ret == raw::xz_ret::XZ_OK {
-            out_vec.extend_from_slice(&out_buf[0..(buf.out_pos as usize)]);
+            out_vec.extend(&out_buf[0..(buf.out_pos as usize)]);
             buf.out_pos = 0;
         } else if ret == raw::xz_ret::XZ_STREAM_END {
-            out_vec.extend_from_slice(&out_buf[0..(buf.out_pos as usize)]);
+            out_vec.extend(&out_buf[0..(buf.out_pos as usize)]);
             break;
         } else {
             return Err(XZError{msg: "Decompressing error", code: Some(raw::XZRawError::from(ret))})
