@@ -1,15 +1,43 @@
 extern crate xz_embedded_sys as raw;
 
+use std::error::Error;
+use std::fmt;
 
-pub fn decompress(compressed_data: &[u8]) -> Vec<u8> {
+#[derive(Debug)]
+pub struct XZError {
+    msg: &'static str,
+    code: Option<raw::XZRawError>
+}
+
+impl Error for XZError {
+    fn description(&self) -> &str { self.msg }
+    fn cause<'a>(&'a self) -> Option<&'a Error> {
+        if let Some(ref e) = self.code {
+            Some(e)
+        } else {
+            None
+        }
+    }
+}
+
+impl fmt::Display for XZError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+pub fn decompress(compressed_data: &[u8]) -> Result<Vec<u8>, XZError> {
     unsafe {
+        // Note that these return void, and can't fail
         raw::xz_crc32_init();
         raw::xz_crc64_init();
     }
     let state = unsafe { 
         raw::xz_dec_init(raw::xz_mode::XZ_DYNALLOC, 1 << 26)
     };
-    if state.is_null() { panic!("failed to init") }
+    if state.is_null() {
+        return Err(XZError{msg: "Failed to initialize", code: None});
+    }
 
     let mut out_vec = Vec::new();
 
@@ -37,55 +65,20 @@ pub fn decompress(compressed_data: &[u8]) -> Vec<u8> {
             out_vec.extend_from_slice(&out_buf[0..(buf.out_pos as usize)]);
             break;
         } else {
-            panic!("Decompressing error {:?}", ret);
+            return Err(XZError{msg: "Decompressing error", code: Some(raw::XZRawError::from(ret))})
         }
         if buf.in_pos == buf.in_size {
-            println!("Reached end of in buffer");
-            break;
+            // if we're reached the end of out input buffer, but we didn't hit
+            // XZ_STREAM_END, i think this is an error
+            return Err(XZError{msg: "Reached end of input buffer", code: None})
         }
     }
 
     unsafe { raw::xz_dec_end(state) };
 
-    out_vec
+    Ok(out_vec)
     
 
 }
 
 
-#[test]
-fn it_works() {
-
-    unsafe {
-        raw::xz_crc32_init();
-        raw::xz_crc64_init();
-
-        let state = raw::xz_dec_init(raw::xz_mode::XZ_DYNALLOC, 1 << 26);
-  
-        let mut out_buf: [u8; 32] = [0; 32];
-        let in_buf = include_bytes!("/storage/home/achin/devel/xz-embedded/userspace/hello.xz");
-
-        let mut buf = raw::xz_buf {
-            _in: in_buf.as_ptr(),
-            in_size: in_buf.len() as u64,
-            in_pos:0,
-
-            out: out_buf.as_mut_ptr(),
-            out_pos: 0,
-            out_size: 2,
-            
-        };
-
-        let ret = raw::xz_dec_run(state, &mut buf);
-        println!("ret={:?}", ret);
-        println!("out_pos: {}", buf.out_pos);
-        println!("out_size: {}", buf.out_size);
-        let mut v = Vec::from(&out_buf[..]);
-        v.truncate(buf.out_pos as usize);
-        println!("{}", String::from_utf8(v).unwrap());
-        println!("in_pos: {}", buf.in_pos);
-
-
-    }
-
-}

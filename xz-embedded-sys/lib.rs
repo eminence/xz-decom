@@ -14,6 +14,41 @@ use libc::{
     size_t
 };
 
+
+/// A wrapper around xz_ret
+#[derive(Debug)]
+pub struct XZRawError {
+    pub code: xz_ret
+}
+
+impl std::fmt::Display for XZRawError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "XZRawError: {:?}", self.code)
+    }
+}
+
+impl std::convert::From<xz_ret> for XZRawError {
+    fn from(e: xz_ret) -> XZRawError {
+        XZRawError{code: e}
+    }
+}
+
+impl std::error::Error for XZRawError {
+    fn description(&self) -> &str { 
+        match self.code {
+            xz_ret::XZ_OK => "Everything is OK so far",
+            xz_ret::XZ_STREAM_END => "Operation finished successfully",
+            xz_ret::XZ_UNSUPPORTED_CHECK => "Integrity check type is not supported",
+            xz_ret::XZ_MEM_ERROR => "Allocating memory failed",
+            xz_ret::XZ_MEMLIMIT_ERROR => "A bigger LZMA2 dictionary is needed than allowed by dict_max",
+            xz_ret::XZ_FORMAT_ERROR => "File format was not recognized",
+            xz_ret::XZ_OPTIONS_ERROR => "This implementation doesn't support the requested compression options",
+            xz_ret::XZ_DATA_ERROR => "Compressed data is corrupt",
+            xz_ret::XZ_BUF_ERROR => "Cannot make any progress"
+        }
+    }
+}
+
 /// Operation mode
 ///
 /// It is possible to enable support only for a subset of the above
@@ -256,6 +291,103 @@ extern "C" {
 }
 
 
+
 #[test]
-fn it_works() {
+fn test_full_hello_decompress() {
+    let data: Vec<u8> = vec!(
+        0xfd,0x37,0x7a,0x58,0x5a,0x00,0x00,0x04,0xe6,0xd6,0xb4,0x46,0x02,0x00,0x21,0x01,
+        0x16,0x00,0x00,0x00,0x74,0x2f,0xe5,0xa3,0x01,0x00,0x04,0x68,0x65,0x6c,0x6c,0x6f,
+        0x00,0x00,0x00,0x00,0xb1,0x37,0xb9,0xdb,0xe5,0xda,0x1e,0x9b,0x00,0x01,0x1d,0x05,
+        0xb8,0x2d,0x80,0xaf,0x1f,0xb6,0xf3,0x7d,0x01,0x00,0x00,0x00,0x00,0x04,0x59,0x5a
+    );
+    unsafe {
+        xz_crc32_init();
+        xz_crc64_init();
+
+        let state = xz_dec_init(xz_mode::XZ_DYNALLOC, 1 << 26);
+  
+        let mut out_buf: [u8; 32] = [0; 32];
+        let in_buf = data;
+
+        let mut buf = xz_buf {
+            _in: in_buf.as_ptr(),
+            in_size: in_buf.len() as u64,
+            in_pos:0,
+
+            out: out_buf.as_mut_ptr(),
+            out_pos: 0,
+            out_size: 32,
+            
+        };
+
+        let ret = xz_dec_run(state, &mut buf);
+        println!("ret={:?}", ret);
+        println!("out_pos: {}", buf.out_pos);
+        println!("out_size: {}", buf.out_size);
+        let mut v = Vec::from(&out_buf[..]);
+        v.truncate(buf.out_pos as usize);
+        println!("in_pos: {}", buf.in_pos);
+        xz_dec_end(state);
+        
+        assert_eq!(ret, xz_ret::XZ_STREAM_END);
+        assert_eq!(buf.out_pos, 5);
+        assert_eq!(buf.in_size, buf.in_pos);
+        assert_eq!(v, "hello".as_bytes());
+
+    }
+}
+
+
+
+#[test]
+fn test_partial_hello_decompress() {
+    let data: Vec<u8> = vec!(
+        0xfd,0x37,0x7a,0x58,0x5a,0x00,0x00,0x04,0xe6,0xd6,0xb4,0x46,0x02,0x00,0x21,0x01,
+        0x16,0x00,0x00,0x00,0x74,0x2f,0xe5,0xa3,0x01,0x00,0x04,0x68,0x65,0x6c,0x6c,0x6f,
+        0x00,0x00,0x00,0x00,0xb1,0x37,0xb9,0xdb,0xe5,0xda,0x1e,0x9b,0x00,0x01,0x1d,0x05,
+        0xb8,0x2d,0x80,0xaf,0x1f,0xb6,0xf3,0x7d,0x01,0x00,0x00,0x00,0x00,0x04,0x59,0x5a
+    );
+    unsafe {
+        xz_crc32_init();
+        xz_crc64_init();
+
+        let state = xz_dec_init(xz_mode::XZ_DYNALLOC, 1 << 26);
+  
+        let mut out_buf: [u8; 32] = [0; 32];
+        let in_buf = data;
+
+        let mut buf = xz_buf {
+            _in: in_buf.as_ptr(),
+            in_size: in_buf.len() as u64,
+            in_pos:0,
+
+            out: out_buf.as_mut_ptr(),
+            out_pos: 0,
+            out_size: 2,
+            // set out_size to be smaller than "hello", so that two calls to xz_dec_run are needed 
+        };
+
+        let ret = xz_dec_run(state, &mut buf);
+        println!("ret={:?}", ret);
+        println!("out_pos: {}", buf.out_pos);
+        println!("out_size: {}", buf.out_size);
+        let mut v = Vec::from(&out_buf[..]);
+        v.truncate(buf.out_pos as usize);
+        println!("in_pos: {}", buf.in_pos);
+        
+        assert_eq!(ret, xz_ret::XZ_OK);
+        assert_eq!(buf.out_pos, 2);
+        assert_eq!(v, "he".as_bytes());
+
+        buf.out_size = 5;
+        let ret = xz_dec_run(state, &mut buf);
+        println!("ret={:?}", ret);
+        assert_eq!(ret, xz_ret::XZ_STREAM_END);
+        let mut v = Vec::from(&out_buf[..]);
+        v.truncate(buf.out_pos as usize);
+        assert_eq!(v, "hello".as_bytes());
+
+
+
+    }
 }
