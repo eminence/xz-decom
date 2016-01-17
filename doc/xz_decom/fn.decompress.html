@@ -46,8 +46,20 @@
             <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                 [<span class='inner'>&#x2212;</span>]
             </a>
-        </span><a id='src-30' class='srclink' href='../src/xz_decom/lib.rs.html#29-82' title='goto source code'>[src]</a></span></h1>
-<pre class='rust fn'>pub fn decompress(compressed_data: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>&amp;[</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u8.html'>u8</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>]</a>) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u8.html'>u8</a>&gt;, <a class='struct' href='../xz_decom/struct.XZError.html' title='xz_decom::XZError'>XZError</a>&gt;</pre></section>
+        </span><a id='src-30' class='srclink' href='../src/xz_decom/lib.rs.html#54-107' title='goto source code'>[src]</a></span></h1>
+<pre class='rust fn'>pub fn decompress(compressed_data: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>&amp;[</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u8.html'>u8</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>]</a>) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u8.html'>u8</a>&gt;, <a class='struct' href='../xz_decom/struct.XZError.html' title='xz_decom::XZError'>XZError</a>&gt;</pre><div class='docblock'><p>Decompress some data</p>
+
+<p>The input slice should contain the full chunk of data to decompress.  There is no support for
+partial decompression</p>
+
+<h1 id='example' class='section-header'><a href='#example'>Example</a></h1>
+<p>Pretty simple:</p>
+<pre class='rust rust-example-rendered'>
+<span class='kw'>let</span> <span class='ident'>data</span> <span class='op'>=</span> <span class='macro'>include_bytes</span><span class='macro'>!</span>(<span class='string'>&quot;data/hello.xz&quot;</span>);
+
+<span class='kw'>let</span> <span class='ident'>result</span> <span class='op'>=</span> <span class='ident'>decompress</span>(<span class='ident'>data</span>).<span class='ident'>unwrap</span>();
+<span class='macro'>assert_eq</span><span class='macro'>!</span>(<span class='ident'>result</span>, <span class='string'>&quot;hello&quot;</span>.<span class='ident'>as_bytes</span>());</pre>
+</div></section>
     <section id='search' class="content hidden"></section>
 
     <section class="footer"></section>

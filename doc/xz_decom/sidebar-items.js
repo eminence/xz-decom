@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["decompress",""]],"struct":[["XZError",""]]});
+initSidebarItems({"fn":[["decompress","Decompress some data"]],"struct":[["XZError","Error type for problems during decompression"]]});
