@@ -1,8 +1,17 @@
+//! xz-decom
+//!
+//! XZ Decompression using xz-embedded
+//!
+//! This crate provides XZ decompression using the xz-embedded library. 
+//! This means that compression and perhaps some advanced features are not supported.
+//!
+
 extern crate xz_embedded_sys as raw;
 
 use std::error::Error;
 use std::fmt;
 
+/// Error type for problems during decompression
 #[derive(Debug)]
 pub struct XZError {
     msg: &'static str,
@@ -26,6 +35,22 @@ impl fmt::Display for XZError {
     }
 }
 
+/// Decompress some data
+///
+/// The input slice should contain the full chunk of data to decompress.  There is no support for
+/// partial decompression
+///
+/// #  Example
+///
+/// Pretty simple:
+///
+/// ```ignore
+/// let data = include_bytes!("data/hello.xz");
+///
+/// let result = decompress(data).unwrap();
+/// assert_eq!(result, "hello".as_bytes());
+/// ```
+///
 pub fn decompress(compressed_data: &[u8]) -> Result<Vec<u8>, XZError> {
     unsafe {
         // Note that these return void, and can't fail

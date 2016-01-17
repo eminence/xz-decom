@@ -2,6 +2,11 @@
 name = "xz-decom"
 version = "0.2.0"
 authors = ["Andrew Chin <achin@eminence32.net>"]
+keywords = ["xz", "decompress", "xz-embedded"]
+description = "XZ decompression using xz-embedded"
+repository = "https://github.com/eminence/xz-decom"
+documentation = "https://eminence.github.io/xz-decom/doc/xz_decom/index.html"
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 xz-embedded-sys = {path = "xz-embedded-sys", version="0.1.1"}

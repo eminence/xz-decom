@@ -5,6 +5,10 @@ authors = ["Andrew Chin <achin@eminence32.net>"]
 build = "build.rs"
 links = "xzembedded"
 description = "Bindings to xz-embedded, a simple decompression-only xz impl"
+keywords = ["xz", "decompress", "xz-embedded"]
+repository = "https://github.com/eminence/xz-decom"
+documentation = "https://eminence.github.io/xz-decom/doc/xz_embedded_sys/index.html"
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 libc = "0.1"
