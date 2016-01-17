@@ -45,6 +45,8 @@ pub fn decompress(compressed_data: &[u8]) -> Vec<u8> {
         }
     }
 
+    unsafe { raw::xz_dec_end(state) };
+
     out_vec
     
 
