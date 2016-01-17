@@ -1,6 +1,6 @@
 [package]
 name = "xz-embedded-sys"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Andrew Chin <achin@eminence32.net>"]
 build = "build.rs"
 links = "xzembedded"
