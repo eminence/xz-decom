@@ -1,4 +1,4 @@
-extern crate gcc;
+extern crate cc;
 
 use std::path::Path;
 
@@ -8,7 +8,7 @@ fn main() {
     let src_dir = Path::new("xz-embedded/linux/lib/xz/");
     let inc_dir = Path::new("xz-embedded/linux/include/linux");
 
-    let mut cfg = gcc::Config::new();
+    let mut cfg = cc::Build::new();
 
     for file in files {
         cfg.file(src_dir.join(file));
@@ -18,12 +18,16 @@ fn main() {
 
     cfg.define("XZ_USE_CRC64", None)
        .define("XZ_DEC_ANY_CHECK", None)
-       .flag("-std=gnu89")
-       .flag("-ggdb3")
-       .flag("-pedantic")
-       .flag("-Wall")
-       .flag("-Wextra")
        .opt_level(2);
+    
+    #[cfg(not(windows))]
+    {
+        cfg.flag("-std=gnu89")
+           .flag("-ggdb3")
+           .flag("-pedantic")
+           .flag("-Wall")
+           .flag("-Wextra");
+    }
 
     cfg.compile("libxzembedded.a");
 

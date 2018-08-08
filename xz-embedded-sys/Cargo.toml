@@ -14,7 +14,7 @@ license = "MIT OR Apache-2.0"
 libc = "0.1"
 
 [build-dependencies]
-gcc = "0.3"
+cc = "1.0"
 
 [lib]
 name = "xz_embedded_sys"
